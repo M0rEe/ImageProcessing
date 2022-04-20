@@ -1,11 +1,14 @@
-from __future__ import division
-import glob, os, numpy as np, matplotlib.pyplot as plt
+import glob
+import os
+import numpy as np
+import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageOps
 from scipy import fftpack
 
 laplacian = ([0, -1, 0],
              [-1, 4, -1],
              [0, -1, 0])
+
 
 def Load_images():
     Images = []
@@ -14,14 +17,16 @@ def Load_images():
         Images.append(infile)
     return Images
 
-def Save_Images(lst,name):
+
+def Save_Images(lst, name):
     k = 0
     for element in lst:
         element.save(f'./OutputImage/_{name}_{k}.png')
         k += 1
 
+
 def Brightniess(rgbimg, value):
-    
+
     input_pixels = rgbimg.load()
     width, height = rgbimg.size
     # creating new image for outputting
@@ -31,7 +36,7 @@ def Brightniess(rgbimg, value):
     for i in range(width):
         for j in range(height):
             r, g, b = input_pixels[i, j]
-            Iold = ((r+g+b)/3)+1          ##! non/zero division
+            Iold = ((r+g+b)/3)+1  # ! non/zero division
             Inew = Iold * value
             r = int(r*Inew/Iold)
             g = int(g*Inew/Iold)
@@ -39,6 +44,7 @@ def Brightniess(rgbimg, value):
             draw.point((i, j), (r, g, b))
 
     return outputimg
+
 
 def BRF(ImageRGB):
     # TODO: Open Images
@@ -86,8 +92,9 @@ def BRF(ImageRGB):
 
     return OutImg.rotate(270.0)
 
+
 def Filter(inputimg, stride=1, padding=1, filter=laplacian, Type='RGB'):
-    
+
     if Type == 'L':
         inputimg = ImageOps.grayscale(inputimg)
 
@@ -139,14 +146,14 @@ if __name__ == "__main__":
     OutImages = []
     for img in imgs:
         pass
-        ##?NOTE::function call only 
-        ##TODO:: K-means
-        ##// Band reject
-        ##? Done
-        ##TODO:: Histogram equalization
-        ##// Filter
-        ##? Done
-        ##// Brightness
-        ##? Done
-        ##TODO:: Histogram show 
-    ##! Save_Images(OutImages,"Image_name")  
+        # ?NOTE::function call only
+        # TODO:: K-means
+        # // Band reject
+        # ? Done
+        # TODO:: Histogram equalization
+        # // Filter
+        # ? Done
+        # // Brightness
+        # ? Done 
+        # TODO:: Histogram show
+    # ! Save_Images(OutImages,"Image_name")
