@@ -1,3 +1,4 @@
+from __future__ import division
 import glob, os, numpy as np, matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageOps
 from scipy import fftpack
@@ -18,6 +19,26 @@ def Save_Images(lst,name):
     for element in lst:
         element.save(f'./OutputImage/_{name}_{k}.png')
         k += 1
+
+def Brightniess(rgbimg, value):
+    
+    input_pixels = rgbimg.load()
+    width, height = rgbimg.size
+    # creating new image for outputting
+    outputimg = Image.new('RGB', (width, height))
+    draw = ImageDraw.Draw(outputimg)
+
+    for i in range(width):
+        for j in range(height):
+            r, g, b = input_pixels[i, j]
+            Iold = ((r+g+b)/3)+1          ##! non/zero division
+            Inew = Iold * value
+            r = int(r*Inew/Iold)
+            g = int(g*Inew/Iold)
+            b = int(b*Inew/Iold)
+            draw.point((i, j), (r, g, b))
+
+    return outputimg
 
 def BRF(ImageRGB):
     # TODO: Open Images
@@ -125,6 +146,7 @@ if __name__ == "__main__":
         ##TODO:: Histogram equalization
         ##// Filter
         ##? Done
-        ##TODO:: Brightness
+        ##// Brightness
+        ##? Done
         ##TODO:: Histogram show 
     ##! Save_Images(OutImages,"Image_name")  
