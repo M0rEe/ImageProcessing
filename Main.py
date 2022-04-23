@@ -24,9 +24,11 @@ def Save_Images(lst, name):
         element.save(f'./OutputImage/_{name}_{k}.png')
         k += 1
 
+# note that input is image path
+
 
 def Brightniess(rgbimg, value):
-
+    rgbimg = Image.open(rgbimg)
     input_pixels = rgbimg.load()
     width, height = rgbimg.size
     # creating new image for outputting
@@ -45,6 +47,8 @@ def Brightniess(rgbimg, value):
 
     return outputimg
 
+# note that input is image path
+
 
 def BRF(ImageRGB):
     # TODO: Open Images
@@ -59,14 +63,13 @@ def BRF(ImageRGB):
     Bfft = fftpack.fftshift(fftpack.fft2(Barr))
     # TODO: BandReject filter
     x, y = Rarr.shape[0], Rarr.shape[1]
-    print(x, y)
+
     # ? circle radius size L & R
     e_x, e_y = 250, 250  # // back ground frequency
     e2_x, e2_y = 205, 205  # // edges  frequency
     bbox = ((x/2)-(e_x/2), (y/2)-(e_y/2), (x/2)+(e_x/2), (y/2)+(e_y/2))
     bbox2 = ((x/2)-(e2_x/2), (y/2)-(e2_y/2), (x/2)+(e2_x/2), (y/2)+(e2_y/2))
-    print(bbox)
-    print(bbox2)
+
     bandpass = Image.new("L", (y, x), color=1)
     draw1 = ImageDraw.Draw(bandpass)
     draw1.ellipse(bbox, fill=1)
@@ -92,9 +95,11 @@ def BRF(ImageRGB):
 
     return OutImg.rotate(270.0)
 
+# note that input is image path
+
 
 def Filter(inputimg, stride=1, padding=1, filter=laplacian, Type='RGB'):
-
+    inputimg = Image.open(inputimg)
     if Type == 'L':
         inputimg = ImageOps.grayscale(inputimg)
 
@@ -140,10 +145,11 @@ def Filter(inputimg, stride=1, padding=1, filter=laplacian, Type='RGB'):
 
         return outimg
 
+# note that input is image path
 
 
 def Histogram_Equalization(img_path):
-    #convert to grayScale
+    # convert to grayScale
     Input_Image = Image.open(img_path)
     Input_image_grayScale = ImageOps.grayscale(Input_Image)
     Input_image_grayScale_pixels = Input_image_grayScale.load()
@@ -174,7 +180,8 @@ def Histogram_Equalization(img_path):
     draw = ImageDraw.Draw(equalized_image)
     for x in range(0, Input_image_grayScale.width - 1):
         for y in range(0, Input_image_grayScale.height - 1):
-            draw.point((x, y), (int(changepixel.get(Input_image_grayScale_pixels[x, y]))))
+            draw.point(
+                (x, y), (int(changepixel.get(Input_image_grayScale_pixels[x, y]))))
 
     # histogram of New_Image
     Histogram_frequency = equalized_image.histogram()
@@ -185,6 +192,7 @@ def Histogram_Equalization(img_path):
     # show the equalized Image
     equalized_image.show()
     return equalized_image
+
 
 if __name__ == "__main__":
     imgs = Load_images()
@@ -200,6 +208,6 @@ if __name__ == "__main__":
         # // Filter
         # ? Done
         # // Brightness
-        # ? Done 
+        # ? Done
         # TODO:: Histogram show
     # ! Save_Images(OutImages,"Image_name")
