@@ -141,6 +141,51 @@ def Filter(inputimg, stride=1, padding=1, filter=laplacian, Type='RGB'):
         return outimg
 
 
+
+def Histogram_Equalization(img_path):
+    #convert to grayScale
+    Input_Image = Image.open(img_path)
+    Input_image_grayScale = ImageOps.grayscale(Input_Image)
+    Input_image_grayScale_pixels = Input_image_grayScale.load()
+    width, height = Input_Image.size
+
+    # Visualize the histogram of original Image
+    Histogram_frequency = Input_image_grayScale.histogram()
+    Histogram_index = np.arange(256)
+    plt.bar(x=Histogram_index, height=Histogram_frequency)
+    plt.show(block=False)
+
+    # get probability of each pixel
+    total_number_pixels = width * height
+    Probability = []
+    for x in range(0, 256):
+        if Histogram_frequency[x] == 0:
+            Histogram_frequency[x] = 1
+        Probability.append(Histogram_frequency[x] / total_number_pixels)
+
+    # Equalizer the image
+    changepixel = {}
+    last_sum = 0
+    for x in range(256):
+        last_sum = last_sum + (255 * Probability[x])
+        changepixel[x] = (math.floor(last_sum))
+
+    equalized_image = Image.new("L", Input_Image.size)
+    draw = ImageDraw.Draw(equalized_image)
+    for x in range(0, Input_image_grayScale.width - 1):
+        for y in range(0, Input_image_grayScale.height - 1):
+            draw.point((x, y), (int(changepixel.get(Input_image_grayScale_pixels[x, y]))))
+
+    # histogram of New_Image
+    Histogram_frequency = equalized_image.histogram()
+
+    Histogram_index = np.arange(256)
+    plt.bar(x=Histogram_index, height=Histogram_frequency)
+    plt.show()
+    # show the equalized Image
+    equalized_image.show()
+    return equalized_image
+
 if __name__ == "__main__":
     imgs = Load_images()
     OutImages = []
@@ -150,7 +195,8 @@ if __name__ == "__main__":
         # TODO:: K-means
         # // Band reject
         # ? Done
-        # TODO:: Histogram equalization
+        # // Histogram equalization
+        # ? Done
         # // Filter
         # ? Done
         # // Brightness
