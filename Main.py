@@ -1,15 +1,20 @@
 import glob
+import math
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageOps
 from scipy import fftpack
 
-laplacian = ([0, -1, 0],
+laplacian = [[0, -1, 0],
              [-1, 4, -1],
-             [0, -1, 0])
+             [0, -1, 0]]
 
-
+Gaussian=[[1/256,4/256,6/256,4/256,1/256],
+          [4/256,16/256,24/256,16/256,4/256],
+          [6/256,24/256,36/256,24/256,6/256],
+          [4/256,16/256,24/256,16/256,4/256],
+          [1/256,4/256,6/256,4/256,1/256]]
 def Load_images():
     Images = []
     for infile in glob.glob("./InputImage/*.jpg"):
@@ -26,6 +31,24 @@ def Save_Images(lst, name):
 
 # note that input is image path
 
+'fun to check image Type(grayscale or RGB)'
+def isgray(image):
+  input_image = Image.open(image).convert('RGB')
+  grayscale='L'
+  w, h = input_image.size
+  for i in range(w):
+    for j in range(h):
+      r, g, b = input_image.getpixel((i, j))
+      'In grayscale image r=g=b so we chack if value of r=g=b or not'
+      if r != g != b:
+        grayscale='RGB'
+        return grayscale
+        break
+      else:
+        grayscale='L'
+        return  grayscale
+
+'#################################################'
 
 def Brightniess(rgbimg, value):
     rgbimg = Image.open(rgbimg)
@@ -98,53 +121,56 @@ def BRF(ImageRGB):
 # note that input is image path
 
 
-def Filter(inputimg, stride=1, padding=1, filter=laplacian, Type='RGB'):
-    inputimg = Image.open(inputimg)
-    if Type == 'L':
-        inputimg = ImageOps.grayscale(inputimg)
+def Filter(filter,size):
+  inputimg=Image.open('grayscale.jpg')
+  inputimg.show()
+  'Check type of image'
+  Type=isgray('grayscale.jpg')
+  if Type == 'L':
+    inputimg = ImageOps.grayscale(inputimg)
 
-    pixel = inputimg.load()
-    width, height = inputimg.size
+  pixel = inputimg.load()
+  width, height = inputimg.size
 
-    outimg = Image.new(Type, (width, height))
-    draw = ImageDraw.Draw(outimg)
+  outimg = Image.new(Type, (width, height))
+  draw = ImageDraw.Draw(outimg)
+  stride = 1
+  padding = 1
+  if Type == 'RGB':
 
-    if Type == 'RGB':
+    for x in range(padding, width - padding):
+      for y in range(padding, height - padding):
+        res = [0, 0, 0]
+        for a in range(len(filter)):
+          for b in range(len(filter)):
+            xrow = x + a - padding
+            ycol = y + b - padding
+            res[0] += int((pixel[xrow, ycol][0] * filter[a][b]))
+            res[1] += int((pixel[xrow, ycol][1] * filter[a][b]))
+            res[2] += int((pixel[xrow, ycol][2] * filter[a][b]))
 
-        for x in range(padding, width-padding):
-            for y in range(padding, height-padding):
-                res = [0, 0, 0]
-                for a in range(len(filter)):
-                    for b in range(len(filter)):
-                        xrow = x+a-padding
-                        ycol = y+b-padding
-                        res[0] += int((pixel[xrow, ycol][0] * filter[a][b]))
-                        res[1] += int((pixel[xrow, ycol][1] * filter[a][b]))
-                        res[2] += int((pixel[xrow, ycol][2] * filter[a][b]))
+        draw.point((x, y), (int(res[0]), int(res[1]), int(res[2])))
+        y += stride
+      x += stride
 
-                draw.point((x, y), (int(res[0]), int(res[1]), int(res[2])))
-                y += stride
-            x += stride
+    outimg.show()
 
-        return outimg
+  elif Type == 'L':
 
-    elif Type == 'L':
+    for x in range(padding, width - padding):
+      for y in range(padding, height - padding):
+        res = 0
+        for a in range(len(filter)):
+          for b in range(len(filter)):
+            xrow = x + a - padding
+            ycol = y + b - padding
+            res += int((pixel[xrow, ycol] * filter[a][b]))
 
-        for x in range(padding, width-padding):
-            for y in range(padding, height-padding):
-                res = 0
-                for a in range(len(filter)):
-                    for b in range(len(filter)):
-                        xrow = x+a-padding
-                        ycol = y+b-padding
-                        res += int((pixel[xrow, ycol] * filter[a][b]))
+        draw.point((x, y), res)
+        y += stride
+      x += stride
 
-                draw.point((x, y), res)
-                y += stride
-            x += stride
-
-        return outimg
-
+    outimg.show()
 # note that input is image path
 
 
@@ -193,6 +219,33 @@ def Histogram_Equalization(img_path):
     equalized_image.show()
     return equalized_image
 
+def Dis_Histogram(image):
+  input_image=Image.open(image)
+  'first we check if image in a gray scale mode or RGB'
+  type=isgray(image)
+  '-------------------------------------------'
+  if type=='L':
+    grayImage=ImageOps.grayscale(input_image)
+    histogram_frequency=grayImage.histogram()
+    histogram_index=np.arange(256)
+    'visualizing our histogram using matplotlib module'
+    plt.bar(x=histogram_index,height=histogram_frequency)
+    plt.show()
+    '-------------------------------------------'
+  elif type=='RGB':
+    r,g,b=input_image.split()
+    histogram_frequency1 = r.histogram()
+    histogram_frequency2 = g.histogram()
+    histogram_frequency3 = b.histogram()
+    histogram_index=np.arange(256)
+    'visualizing our histogram for 3 channel using matplotlib module'
+    plt.bar(x=histogram_index,height=histogram_frequency1)
+    plt.show()
+    plt.bar(x=histogram_index,height=histogram_frequency2)
+    plt.show()
+    plt.bar(x=histogram_index,height=histogram_frequency3)
+    plt.show()
+'###########################################################'
 
 if __name__ == "__main__":
     imgs = Load_images()
