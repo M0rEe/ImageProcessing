@@ -1,10 +1,8 @@
 import glob
-from msilib.schema import RadioButton
 import os
 import math
 import random
-from tkinter import BOTTOM, LEFT, NW, RIGHT, SW, TOP, Button, Entry, Label, OptionMenu, Radiobutton, Scale, StringVar, Tk, filedialog, messagebox
-from matplotlib.ft2font import HORIZONTAL
+from tkinter import BOTTOM, NW, RIGHT, SW, TOP, Button, Label, OptionMenu, Radiobutton, Scale, StringVar, Tk, filedialog, messagebox
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageOps, ImageTk
