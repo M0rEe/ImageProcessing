@@ -2,7 +2,8 @@ import glob
 import os
 import math
 import random
-from tkinter import BOTTOM, NW, RIGHT, SW, TOP, Button, Label, OptionMenu, Radiobutton, Scale, StringVar, Tk, filedialog, messagebox
+from tkinter import BOTTOM, LEFT, NW, RIGHT, SW, TOP, Button, Frame, Label, LabelFrame, OptionMenu, Radiobutton, Scale, StringVar, Tk, filedialog, messagebox
+import tkinter
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageOps, ImageTk
@@ -14,6 +15,9 @@ laplacian = ([0, -1, 0],
 gaussian = ([1/9, 1/9, 1/9],
             [1/9, 1/9, 1/9],
             [1/9, 1/9, 1/9])
+sharpeness = ([-1, -1, -1],
+              [-1, 9, -1],
+              [-1, -1, -1])
 
 
 def Load_images():
@@ -24,11 +28,8 @@ def Load_images():
     return Images
 
 
-def Save_Images(lst, name):
-    k = 0
-    for element in lst:
-        element.save(f'./OutputImage/_{name}_{k}.png')
-        k += 1
+def Save_Images(element, name):
+    element.save(f'./OutputImages/_{name}')
 
 # note that input is image path
 
@@ -73,7 +74,7 @@ def BRF(ImageRGB):
         x, y = Rarr.shape[0], Rarr.shape[1]
 
         # ? circle radius size L & R
-        e_x, e_y = 50, 50  # // back ground frequency
+        e_x, e_y = 70, 70  # // back ground frequency
         e2_x, e2_y = 25, 25  # // edges  frequency
         bbox = ((x/2)-(e_x/2), (y/2)-(e_y/2), (x/2)+(e_x/2), (y/2)+(e_y/2))
         bbox2 = ((x/2)-(e2_x/2), (y/2)-(e2_y/2),
@@ -106,8 +107,8 @@ def BRF(ImageRGB):
         imgarr = np.array(ImageL)
         imgfft = fftpack.fftshift(fftpack.fft2(imgarr))
         x, y = imgarr.shape[0], imgarr.shape[1]
-        e_x, e_y = 85, 85  # // back ground frequency
-        e2_x, e2_y = 45, 45  # // edges  frequency
+        e_x, e_y = 100, 100  # // back ground frequency
+        e2_x, e2_y = 40, 40  # // edges  frequency
         bbox = ((x/2)-(e_x/2), (y/2)-(e_y/2), (x/2)+(e_x/2), (y/2)+(e_y/2))
         bbox2 = ((x/2)-(e2_x/2), (y/2)-(e2_y/2),
                  (x/2)+(e2_x/2), (y/2)+(e2_y/2))
@@ -276,7 +277,7 @@ def k_means(arr3D, k=5):
 
     newcentroids = []
     i = 0
-    while i < 1:
+    while i < 3:
         clusters, newcentroids = Calc_dest(arr3D, centroids, clusters)
         i += 1
         for m in range(len(clusters)):
@@ -285,6 +286,52 @@ def k_means(arr3D, k=5):
                 clusters[m][j] = color, clusters[m][j][1]
 
     return clusters, newcentroids
+
+
+def Histogram(imgpath):
+    input_image = Image.open(imgpath)
+    type = input_image.mode
+    if type == 'L':
+        grayImage = ImageOps.grayscale(input_image)
+        grayImage = np.array(grayImage)
+        H = np.zeros((256), dtype=int)
+        i = 0
+        while i < 256:
+            H[i] = np.count_nonzero(grayImage == i)
+            i += 1
+        histogram_index = np.arange(256)
+        histogram_frequency = H
+        plt.bar(x=histogram_index, height=histogram_frequency)
+        plt.xlabel('Intensity')
+        plt.ylabel('Frequency')
+        plt.title('Histogram')
+        plt.show()
+    elif type == 'RGB':
+        r, g, b = input_image.split()
+        r = np.array(r)
+        g = np.array(g)
+        b = np.array(b)
+        H1 = np.zeros((256), dtype=int)
+        H2 = np.zeros((256), dtype=int)
+        H3 = np.zeros((256), dtype=int)
+        i = 0
+        while i < 256:
+            H1[i] = np.count_nonzero(r == i)
+            H2[i] = np.count_nonzero(g == i)
+            H3[i] = np.count_nonzero(b == i)
+            i = i+1
+        histogram_index = np.arange(256)
+        histogram_frequency1 = H1
+        histogram_frequency2 = H2
+        histogram_frequency3 = H3
+        fig, axs = plt.subplots(3)
+        fig.suptitle("Histograms")
+        axs[0].bar(x=histogram_index, height=histogram_frequency1, color='red')
+        axs[1].bar(x=histogram_index,
+                   height=histogram_frequency2, color='green')
+        axs[2].bar(x=histogram_index,
+                   height=histogram_frequency3, color='blue')
+        plt.show()
 
 
 def Open_dialog():
@@ -300,12 +347,15 @@ def Open_dialog():
 
 def execute_filter(event):
     global imgpath, img, photo
+
     if selected_filter.get() == "Laplacian filter":
         photo = Filter(imgpath, filter=laplacian)
-        photo = photo.resize((600, 600))
-    if selected_filter.get() == "Gaussian filter":
+    elif selected_filter.get() == "Gaussian filter":
         photo = Filter(imgpath, filter=gaussian)
-        photo = photo.resize((600, 600))
+    elif selected_filter.get() == "Sharpness filter":
+        photo = Filter(imgpath, filter=sharpeness)
+
+    photo = photo.resize((600, 600))
     messagebox.showinfo("Done", "Filter has been made into given Image")
     img = ImageTk.PhotoImage(photo)
     photolbl.config(text="Filtered Image", image=img, compound=BOTTOM)
@@ -357,6 +407,24 @@ def Iluminate(ratio):
                     image=img, compound=BOTTOM)
 
 
+def histshow():
+    global imgpath, img, photo
+    Histogram(imgpath)
+
+
+def saveimg():
+    global imgpath, img, photo
+    path = filedialog.asksaveasfilename(
+        initialdir="./OutputImages/", confirmoverwrite=True, defaultextension=".jpg",
+        filetypes=(("Jpg Images", ".jpg"), ("Other types", ".")), title="Save Image As")
+    try:
+        path = path.split('/')
+        Save_Images(element=photo, name=path[-1])
+        messagebox.showinfo("Done", "Image has been Saved")
+    except:
+        print("Error ,try save again")
+
+
 if __name__ == "__main__":
 
     root = Tk()
@@ -364,19 +432,20 @@ if __name__ == "__main__":
 
     root.minsize(500, 500)
     root.resizable(width=False, height=False)
-
+    root.iconbitmap(bitmap="./seo.ico")
     opnbtn = Button(root, text="Open Image")
     imgpath = ""
 
     opnbtn.config(command=Open_dialog)
 
-    imglbl = Label(root, text=imgpath)
+    pfr = LabelFrame(root, text="Path:",borderwidth=2,padx=100)
+    imglbl = Label(pfr, text=imgpath)
     photolbl = Label(root, width=600, height=600)
     Open_dialog()
 
     opnbtn.pack(side=TOP, anchor=NW, padx=10, pady=10)
     if imgpath != "":
-        photolbl.pack(side=RIGHT, anchor=NW, pady=10, padx=10)
+        photolbl.pack(side=RIGHT, anchor=NW, ipady=10, ipadx=10)
         imglbl.pack(side=BOTTOM, anchor=SW, padx=10, pady=10)
     filtervar = 0
     bandrejectvar = 0
@@ -385,39 +454,40 @@ if __name__ == "__main__":
     brightvar = 0
     histovar = 0
     selected_filter = StringVar()
+    groupframe = LabelFrame(root, text="Functions:", padx=70, pady=5,borderwidth=5)
+    groupframe.pack(side=TOP)
+    pfr.pack(side=BOTTOM)
     # Select filter then pass to the dunction     # ? Done
-    r1 = Radiobutton(root, text="Filters", variable=filtervar, value=0)
+    r1 = Radiobutton(groupframe, text="Filters", variable=filtervar, value=0)
     # Radio button check function calls only  # ? Done
-    r2 = Radiobutton(root, text="Band Reject",
+    r2 = Radiobutton(groupframe, text="Band Reject",
                      variable=bandrejectvar, value=1, command=Bandrej)
-    r3 = Radiobutton(root, text="Histogram Equalization", variable=histequalvar, value=2,
+    r3 = Radiobutton(groupframe, text="Histogram Equalization", variable=histequalvar, value=2,
                      command=equalization)  # Radio button check function calls only  # ? Done
     # Radio button check function calls only  # ? Done
-    r4 = Radiobutton(root, text="K-means", variable=kmvar,
+    r4 = Radiobutton(groupframe, text="K-means", variable=kmvar,
                      value=3, command=means)
-    r5 = Radiobutton(root, text="Brightness", variable=brightvar, value=4, command=lambda: Iluminate(
+    r5 = Radiobutton(groupframe, text="Brightness", variable=brightvar, value=4, command=lambda: Iluminate(
         slider.get()))  # Slider passing the brightness value to the function  # ? Done
     # Radio button check only calls the function
-    r6 = Radiobutton(root, text="Histogram", variable=histovar, value=5)
+    r6 = Radiobutton(groupframe, text="Histogram", variable=histovar,
+                     value=5, command=histshow)
     r1.select()
-
-    cmbbx1 = OptionMenu(root, selected_filter, "Laplacian filter",
-                        "Gaussian filter", command=execute_filter)
+    savebtn = Button(groupframe, text="Save Image", command=saveimg)
+    cmbbx1 = OptionMenu(groupframe, selected_filter, "Laplacian filter",
+                        "Gaussian filter", "Sharpness filter", command=execute_filter)
     global slider
-    slider = Scale(root, from_=0, to=2, orient="horizontal", resolution=0.1)
+    slider = Scale(groupframe, from_=0, to=2,
+                   orient="horizontal", resolution=0.1)
     brightvar = slider.get()
-    r1.pack(side=TOP, anchor=NW)
-    cmbbx1.pack(side=TOP, anchor=NW)
-    r2.pack(side=TOP, anchor=NW)
-    r3.pack(side=TOP, anchor=NW)
-    r4.pack(side=TOP, anchor=NW)
-    r5.pack(side=TOP, anchor=NW)
+    r1.pack(side=TOP, anchor=NW, padx=20, pady=30)
+    cmbbx1.pack(side=TOP)
+    r2.pack(side=TOP, anchor=NW, padx=20, pady=30)
+    r3.pack(side=TOP, anchor=NW, padx=20, pady=30)
+    r4.pack(side=TOP, anchor=NW, padx=20, pady=30)
+    r5.pack(side=TOP, anchor=NW, padx=20, pady=30)
     slider.pack()
-    r6.pack(side=TOP, anchor=NW)
+    r6.pack(side=TOP, anchor=NW, padx=20, pady=30)
+    savebtn.pack()
     root.mainloop()
-    """
-    for img in imgs:
-        pass
-        # TODO:: Histogram show
-        # ! Save_Images(OutImages,"Image_name")
-    """
+    
