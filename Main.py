@@ -2,8 +2,7 @@ import glob
 import os
 import math
 import random
-from tkinter import BOTTOM, LEFT, NW, RIGHT, SW, TOP, Button, Frame, Label, LabelFrame, OptionMenu, Radiobutton, Scale, StringVar, Tk, filedialog, messagebox
-import tkinter
+from tkinter import BOTTOM, NW, RIGHT, SW, TOP, Button, Label, LabelFrame, OptionMenu, Radiobutton, Scale, StringVar, Tk, filedialog, messagebox
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageOps, ImageTk
@@ -432,7 +431,7 @@ if __name__ == "__main__":
 
     root.minsize(500, 500)
     root.resizable(width=False, height=False)
-    root.iconbitmap(bitmap="./seo.ico")
+    root.iconbitmap(bitmap="seo.ico")
     opnbtn = Button(root, text="Open Image")
     imgpath = ""
 
